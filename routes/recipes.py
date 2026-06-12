@@ -29,6 +29,25 @@ def get_recipe(recipe_id: int):
         "message": "Recipe not found"
     }
 
+@router.put("/{recipe_id}")
+def update_recipe(recipe_id: int, updated_recipe: Recipe):
+    for recipe in recipes:
+        if recipe["id"] == recipe_id:
+            recipe["title"] = updated_recipe.title
+            recipe["description"] = updated_recipe.description
+            recipe["category"] = updated_recipe.category
+            recipe["prep_time"] = updated_recipe.prep_time
+            recipe["cook_time"] = updated_recipe.cook_time
+            recipe["servings"] = updated_recipe.servings
+
+            return {
+                "message": "Recipe updated",
+                "recipe": recipe
+            }
+    return {
+        "message": "Recipe not found"
+    }
+
 @router.post("/")
 def create_recipe(recipe: Recipe):
     new_recipe = {
