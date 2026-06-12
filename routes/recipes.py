@@ -22,7 +22,7 @@ def get_recipes():
 
 @router.post("/")
 def create_recipe(recipe: Recipe):
-    recipes.append(recipe.dict())
+    recipes.append(recipe.model_dump())
     return {
         "message": "Recipe created",
         "recipe": recipe
