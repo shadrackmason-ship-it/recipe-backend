@@ -1,78 +1,62 @@
-from fastapi import APIRouter, Query
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models.recipe import Recipe as RecipeModel
+from app.schemas.recipe import RecipeCreate, RecipeResponse
 
 router = APIRouter(
     prefix="/recipes",
     tags=["Recipes"]
 )
 
-class Recipe(BaseModel):
-    title: str
-    description: str
-    category: str
-    prep_time: int
-    cook_time: int
-    servings: int
+@router.post("/", response_model=RecipeResponse)
+def create_recipe(recipe: RecipeCreate, db: Session = Depends(get_db)):
+    new_recipe = RecipeModel(
+        title=recipe.title,
+        description=recipe.description,
+        category=recipe.category,
+        prep_time=recipe.prep_time,
+        cook_time=recipe.cook_time,
+        servings=recipe.servings
+    )
+    db.add(new_recipe)
+    db.commit()
+    db.refresh(new_recipe)
+    return new_recipe
 
-recipes = []
+@router.get("/", response_model=list[RecipeResponse])
+def get_recipes(db: Session = Depends(get_db)):
+    return db.query(RecipeModel).all()
 
-@router.get("/")
-def get_recipes():
-    return {"recipes": recipes}
+@router.get("/{recipe_id}", response_model=RecipeResponse)
+def get_recipe(recipe_id: int, db: Session = Depends(get_db)):
+    recipe = db.query(RecipeModel).filter(RecipeModel.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    return recipe
 
-@router.get("/{recipe_id}")
-def get_recipe(recipe_id: int):
-    for recipe in recipes:
-        if recipe["id"] == recipe_id:
-            return recipe
-    return {
-        "message": "Recipe not found"
-    }
-
-@router.put("/{recipe_id}")
-def update_recipe(recipe_id: int, updated_recipe: Recipe):
-    for recipe in recipes:
-        if recipe["id"] == recipe_id:
-            recipe["title"] = updated_recipe.title
-            recipe["description"] = updated_recipe.description
-            recipe["category"] = updated_recipe.category
-            recipe["prep_time"] = updated_recipe.prep_time
-            recipe["cook_time"] = updated_recipe.cook_time
-            recipe["servings"] = updated_recipe.servings
-
-            return {
-                "message": "Recipe updated",
-                "recipe": recipe
-            }
-    return {
-        "message": "Recipe not found"
-    }
-
-@router.post("/")
-def create_recipe(recipe: Recipe):
-    new_recipe = {
-        "id": len(recipes) + 1,
-        "title": recipe.title,
-        "description": recipe.description,
-        "category": recipe.category,
-        "prep_time": recipe.prep_time,
-        "cook_time": recipe.cook_time,
-        "servings": recipe.servings
-    }
-    recipes.append(new_recipe)
-    return {
-        "message": "Recipe created",
-        "recipe": new_recipe
-    }
+@router.put("/{recipe_id}", response_model=RecipeResponse)
+def update_recipe(recipe_id: int, updated_recipe: RecipeCreate, db: Session = Depends(get_db)):
+    recipe = db.query(RecipeModel).filter(RecipeModel.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    recipe.title = updated_recipe.title
+    recipe.description = updated_recipe.description
+    recipe.category = updated_recipe.category
+    recipe.prep_time = updated_recipe.prep_time
+    recipe.cook_time = updated_recipe.cook_time
+    recipe.servings = updated_recipe.servings
+    db.commit()
+    db.refresh(recipe)
+    return recipe
 
 @router.delete("/{recipe_id}")
-def delete_recipe(recipe_id: int):
-    for recipe in recipes:
-        if recipe["id"] == recipe_id:
-            recipes.remove(recipe)
-            return {
-                "message": "Recipe deleted"
-            }
+def delete_recipe(recipe_id: int, db: Session = Depends(get_db)):
+    recipe = db.query(RecipeModel).filter(RecipeModel.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    db.delete(recipe)
+    db.commit()
     return {
-        "message": "Recipe not found"
+        "message": "Recipe deleted"
     }

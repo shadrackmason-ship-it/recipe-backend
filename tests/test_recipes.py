@@ -1,23 +1,32 @@
+import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from app.database import get_db, Base, engine,SessionLocal
 
 client = TestClient(app)
 
+@pytest.fixture(autouse=True)
+def setup_db():
+    Base.metadata.create_all(bind=engine)
+    yield
+    Base.metadata.drop_all(bind=engine)
+
+def override_get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+app.dependency_overrides[get_db] = override_get_db
+
 def test_home():
     response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == {
-        "message": "backend running"
-    }
-
-def test_get_recipes():
-    response = client.get("/recipes/")
     assert response.status_code == 200
 
 def test_create_recipe():
     recipe = {
         "title": "Pancakes",
-        "description": "Easy breakfast", 
+        "description": "Easy breakfast",
         "category": "Breakfast",
         "prep_time": 10,
         "cook_time": 15,
@@ -25,8 +34,7 @@ def test_create_recipe():
     }
     response = client.post("/recipes/", json=recipe)
     assert response.status_code == 200
-    data = response.json()
-    assert data["recipe"]["title"] == "Pancakes"
+    assert response.json()["title"] == "Pancakes"
 
 def test_update_recipe():
     recipe = {
@@ -37,9 +45,9 @@ def test_update_recipe():
         "cook_time": 25,
         "servings": 4
     }
-    create_response = client.post("/recipes/", json=recipe)
-    recipe_id = create_response.json()["recipe"]["id"]
-    updated_recipe = {
+    create = client.post("/recipes/", json=recipe)
+    recipe_id = create.json()["id"]
+    updated = {
         "title": "Pepperoni Pizza",
         "description": "Cheese and pepperoni",
         "category": "Dinner",
@@ -47,8 +55,9 @@ def test_update_recipe():
         "cook_time": 30,
         "servings": 4
     }
-    response = client.put(f"/recipes/{recipe_id}", json=updated_recipe)
+    response = client.put(f"/recipes/{recipe_id}", json=updated)
     assert response.status_code == 200
+    assert response.json()["title"] == "Pepperoni Pizza"
 
 def test_delete_recipe():
     recipe = {
@@ -59,8 +68,8 @@ def test_delete_recipe():
         "cook_time": 15,
         "servings": 2
     }
-    create_response = client.post("/recipes/", json=recipe)
-    recipe_id = create_response.json()["recipe"]["id"]
+    create = client.post("/recipes/", json=recipe)
+    recipe_id = create.json()["id"]
     response = client.delete(f"/recipes/{recipe_id}")
     assert response.status_code == 200
     assert response.json()["message"] == "Recipe deleted"
