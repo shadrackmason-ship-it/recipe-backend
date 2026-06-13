@@ -1,7 +1,6 @@
 from fastapi import FastAPI
-
-app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "backend running"}
+from app.database import Base, engine
+from app.routes import auth
+Base.metadata.create_all(Bind=engine)
+app = FastAPI(title="Recipe Backend")
+app.include_router(auth.router)
