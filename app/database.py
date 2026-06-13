@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
-# Use SQLite for now so you can run locally without Postgres
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
 
 engine = create_engine(

@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from routes import community
 from app.database import Base, engine
-from app.models.community import Favorite, Review  # import classes directly
+from app.models.community import Favorite, Review
 
 app = FastAPI()
 
