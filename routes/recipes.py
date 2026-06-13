@@ -64,3 +64,15 @@ def create_recipe(recipe: Recipe):
         "message": "Recipe created",
         "recipe": new_recipe
     }
+
+@router.delete("/{recipe_id}")
+def delete_recipe(recipe_id: int):
+    for recipe in recipes:
+        if recipe["id"] == recipe_id:
+            recipes.remove(recipe)
+            return {
+                "message": "Recipe deleted"
+            }
+    return {
+        "message": "Recipe not found"
+    }
