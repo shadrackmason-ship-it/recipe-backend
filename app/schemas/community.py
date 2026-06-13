@@ -2,6 +2,13 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
+class RecipeOut(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    class Config:
+        from_attributes = True
+
 class ReviewCreate(BaseModel):
     rating: int = Field(..., ge=1, le=5, description="Rating from 1 to 5")
     comment: Optional[str] = Field(None, max_length=500)

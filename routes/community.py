@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.database import get_db
-from app.models.community import Favorite, Review
-from app.schemas.community import ReviewCreate, ReviewOut, FavoriteOut
+from app.models.community import Favorite, Review, Recipe
+from app.schemas.community import ReviewCreate, ReviewOut, FavoriteOut, RecipeOut
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List
 
@@ -15,6 +15,10 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return token
+
+@router.get("/api/recipes", response_model=List[RecipeOut])
+def get_recipes(db: Session = Depends(get_db)):
+    return db.query(Recipe).all()
 
 @router.post("/api/recipes/{recipe_id}/favorite", status_code=201, response_model=FavoriteOut)
 def add_favorite(recipe_id: int, db: Session = Depends(get_db), user_id: str = Depends(get_current_user)):

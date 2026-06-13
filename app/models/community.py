@@ -1,6 +1,12 @@
 from sqlalchemy import Column, Integer, String, DateTime, func
 from app.database import Base
 
+class Recipe(Base):
+    __tablename__ = "recipes"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+
 class Favorite(Base):
     __tablename__ = "favorites"
     id = Column(Integer, primary_key=True, index=True)
