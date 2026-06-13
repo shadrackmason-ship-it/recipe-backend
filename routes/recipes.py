@@ -25,8 +25,16 @@ def create_recipe(recipe: RecipeCreate, db: Session = Depends(get_db)):
     return new_recipe
 
 @router.get("/", response_model=list[RecipeResponse])
-def get_recipes(db: Session = Depends(get_db)):
-    return db.query(RecipeModel).all()
+def get_recipes(db: Session = Depends(get_db), page: int = 1, limit: int = 10):
+    skip = (page - 1) * limit
+    total = db.query(RecipeModel).count()
+    recipes = (db.query(RecipeModel).offset(skip).limit(limit).all())
+    return {
+        "page": page,
+        "limit": limit,
+        "total": total,
+        "data": recipes
+    }
 
 @router.get("/{recipe_id}", response_model=RecipeResponse)
 def get_recipe(recipe_id: int, db: Session = Depends(get_db)):
