@@ -3,7 +3,7 @@ from app.database import Base, engine
 from app.routes import auth
 
 
-Base.metadata.create_all(Bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Recipe Backend")
 
