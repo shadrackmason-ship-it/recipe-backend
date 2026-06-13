@@ -1,9 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 router = APIRouter(
-    prefix = "/recipes",
-    tags = ["Recipes"]
+    prefix="/recipes",
+    tags=["Recipes"]
 )
 
 class Recipe(BaseModel):
@@ -75,4 +75,14 @@ def delete_recipe(recipe_id: int):
             }
     return {
         "message": "Recipe not found"
+    }
+
+@router.get("/search/")
+def search_recipes(keyword: str = Query(...)):
+    results = []
+    for recipe in recipes:
+        if keyword.lower() in recipe["title"].lower():
+            results.append(recipe)
+    return {
+        "results": results
     }
