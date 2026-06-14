@@ -1,7 +1,7 @@
 from fastapi import FastAPI
+from app.api.routes import search, categories
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "backend running"}
+app.include_router(search.router)
+app.include_router(categories.router)
