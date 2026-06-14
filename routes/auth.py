@@ -9,7 +9,7 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserOut, Token
 router = APIRouter(prefix="/auth", tags=["auth"])
-SECRET_KEY = os.getenv("8d5c8a9e7f3b1a4c2d6e9f8a7b5c3d1e4f6a8b9c0d2e1f3a5b7c9d8e6f4a2b1")
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
