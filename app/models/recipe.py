@@ -1,6 +1,5 @@
-from sqlalchemy import Column
-from sqlalchemy import Integer
-from sqlalchemy import String
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.types import JSON
 from app.database import Base
 
 class Recipe(Base):
@@ -12,3 +11,5 @@ class Recipe(Base):
     prep_time = Column(Integer)
     cook_time = Column(Integer)
     servings = Column(Integer)
+    ingredients = Column(JSON, nullable=True)
+    instructions = Column(JSON, nullable=True)
