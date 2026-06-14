@@ -8,10 +8,13 @@ import os
 from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserOut, Token
+from dotenv import load_dotenv
+load_dotenv()
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -27,7 +30,7 @@ def verify_password(plain_password:str, hashed_password: str)-> bool:
 
 def create_access_token(data:dict,expires_delta: timedelta | None= None):
         to_encode = data.copy()
-        expire = datetime.now + (
+        expire = datetime.now() + (
                 expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
         to_encode.update({"exp": expire})
@@ -83,7 +86,7 @@ def login(
        db:Session = Depends(get_db)
 ):
        user = db.query(User).filter(
-              (User.email == user.email) | (User.username == user.username)
+              (User.email == form_data.username) | (User.username == form_data.username)
        ).first()
        if not user or not verify_password(form_data.password,user.hashed_password):
               raise HTTPException(
