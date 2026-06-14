@@ -1,7 +1,19 @@
 from fastapi import FastAPI
-from app.api.routes import search, categories
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from routes import community
+from app.database import Base, engine
+from app.models.community import Favorite, Review, Recipe
 
 app = FastAPI()
 
-app.include_router(search.router)
-app.include_router(categories.router)
+@app.on_event("startup")
+def startup():
+    Base.metadata.create_all(bind=engine)
+    print("Database tables created")
+
+# register routes
+app.include_router(community.router)
