@@ -1,19 +1,21 @@
 from fastapi import FastAPI
-import sys
-import os
+from fastapi.middleware.cors import CORSMiddleware
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
-from routes import community
-from app.database import Base, engine
-from app.models.community import Favorite, Review, Recipe
+from app.api.routes.search import router as search_router
+from app.api.routes.categories import router as categories_router
 
 app = FastAPI()
 
-@app.on_event("startup")
-def startup():
-    Base.metadata.create_all(bind=engine)
-    print("Database tables created")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# register routes
-app.include_router(community.router)
+app.include_router(search_router)
+app.include_router(categories_router)
