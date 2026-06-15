@@ -1,15 +1,21 @@
 from fastapi import FastAPI
-from app.database import Base
-from app.database import engine
-from app.models.recipe import Recipe
-from routes.recipes import router as recipe_router
+from fastapi.middleware.cors import CORSMiddleware
 
-Base.metadata.create_all(bind=engine)
+from app.api.routes.search import router as search_router
+from app.api.routes.categories import router as categories_router
 
 app = FastAPI()
 
-app.include_router(recipe_router)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/")
-def home():
-    return {"message": "backend running"}
+app.include_router(search_router)
+app.include_router(categories_router)
