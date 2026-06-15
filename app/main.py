@@ -1,23 +1,24 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Form, HTTPException
+from app.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import Base
-from app.database import engine
-from app.models.recipe import Recipe
-from routes.recipes import router as recipe_router
+from routes.auth import router as auth_router
+from app.api.routes.search import router as search_router
+from app.api.routes.categories import router as categories_router
 
+
+app = FastAPI(title="Recipe Backend")
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.include_router(recipe_router)
-
-@app.get("/")
-def home():
-    return {"message": "backend running"}
+app.include_router(auth_router)
+app.include_router(search_router)
+app.include_router(categories_router)
