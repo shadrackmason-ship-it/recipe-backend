@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.recipe import Recipe as RecipeModel
-from app.schemas.recipe import RecipeCreate, RecipeResponse
+from app.schemas.recipe import (RecipeCreate, RecipeResponse, RecipeListResponse)
 
 router = APIRouter(
     prefix="/recipes",
@@ -17,14 +17,16 @@ def create_recipe(recipe: RecipeCreate, db: Session = Depends(get_db)):
         category=recipe.category,
         prep_time=recipe.prep_time,
         cook_time=recipe.cook_time,
-        servings=recipe.servings
+        servings=recipe.servings,
+        ingredients=recipe.ingredients,
+        instructions=recipe.instructions
     )
     db.add(new_recipe)
     db.commit()
     db.refresh(new_recipe)
     return new_recipe
 
-@router.get("/", response_model=list[RecipeResponse])
+@router.get("/", response_model=RecipeListResponse)
 def get_recipes(db: Session = Depends(get_db), page: int = 1, limit: int = 10):
     skip = (page - 1) * limit
     total = db.query(RecipeModel).count()
@@ -54,6 +56,8 @@ def update_recipe(recipe_id: int, updated_recipe: RecipeCreate, db: Session = De
     recipe.prep_time = updated_recipe.prep_time
     recipe.cook_time = updated_recipe.cook_time
     recipe.servings = updated_recipe.servings
+    recipe.ingredients = updated_recipe.ingredients
+    recipe.instructions = updated_recipe.instructions
     db.commit()
     db.refresh(recipe)
     return recipe
