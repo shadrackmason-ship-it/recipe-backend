@@ -1,25 +1,29 @@
 from fastapi import FastAPI
+from app.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import Base, engine
+
 from app.api.routes.auth import router as auth_router
-from app.api.routes.recipes import router as recipes_router
+from app.api.routes.recipes import router as recipes_router   
 from app.api.routes.search import router as search_router
 from app.api.routes.categories import router as categories_router
 
 app = FastAPI(title="Recipe Backend")
 
+Base.metadata.create_all(bind=engine)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://fabulous-beijinho-cce89f.netlify.app",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-Base.metadata.create_all(bind=engine)
-
-app.include_router(auth_router)
-app.include_router(recipes_router)
-app.include_router(search_router)
-app.include_router(categories_router)
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(recipes_router, prefix="/api/recipes", tags=["recipes"])
+app.include_router(search_router, prefix="/api/search", tags=["search"])
+app.include_router(categories_router, prefix="/api/categories", tags=["categories"])
