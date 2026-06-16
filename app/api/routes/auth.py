@@ -5,16 +5,18 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
+import hashlib
 from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserOut, Token
 from dotenv import load_dotenv
+from passlib.context import CryptContext
 load_dotenv()
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -22,11 +24,14 @@ pwd_context = CryptContext(
 )
 oauth2 = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-def hash_password(password: str) -> str:
-        return pwd_context.hash(password)
+def normalize_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
 
-def verify_password(plain_password:str, hashed_password: str)-> bool:
-        return pwd_context.verify(plain_password,hashed_password)
+def hash_password(password: str) -> str:
+    return pwd_context.hash(normalize_password(password))
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(normalize_password(plain_password), hashed_password)
 
 def create_access_token(data:dict,expires_delta: timedelta | None= None):
         to_encode = data.copy()
@@ -46,7 +51,7 @@ def get_current_user(
                 headers={"WWW-Authenticate":"Bearer"},
                 )
         try: 
-            payload = jwt.decode(token,SECRET_KEY, algorithm=[ALGORITHM])
+            payload = jwt.decode(token,SECRET_KEY, algorithms=[ALGORITHM])
             user_id:str | None = payload.get("sub")
             if user_id is None:
                    raise credentials_exception
